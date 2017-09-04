@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="BeatTheDot.SettingsPage"
+             Title="Settings">
+    <ContentPage.Content>
+        <ScrollView>
+            <StackLayout>
+                <Label Text="Company" />
+                <Entry x:Name="editorCompany" Text="{ Binding Company }" />
+
+                <Label Text="User" />
+                <Entry x:Name="editorUser" Text="{ Binding User }" />
+
+                <Label Text="Password" />
+                <Entry x:Name="entryPassword" IsPassword="True" Text="{ Binding Pass }" />
+
+                <Label Text="Tolerance" />
+                <Entry x:Name="editorTolerance" Keyboard="Numeric" Text="{ Binding Tolerance }" />
+
+                <Label Text="Lunch interval" />
+                <Entry x:Name="editorLunchtime" Keyboard="Numeric" Text="{ Binding LunchTime }" />
+
+                <Label Text="Lunch at" />
+                <TimePicker Time="{ Binding LunchAt }" />
+
+                <Label Text="Work time" />
+                <TimePicker Time="{ Binding Worktime }" />
+
+                <Button Text="Save" Clicked="Save" />
+            </StackLayout>
+        </ScrollView>
+    </ContentPage.Content>
+</ContentPage>
