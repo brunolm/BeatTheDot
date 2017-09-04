@@ -10,10 +10,10 @@
                 <Entry x:Name="editorCompany" Text="{ Binding Company }" />
 
                 <Label Text="User" />
-                <Entry x:Name="editorUser" Text="{ Binding User }" />
+                <Entry x:Name="editorUser" Text="{ Binding User }" Keyboard="Numeric" />
 
                 <Label Text="Password" />
-                <Entry x:Name="entryPassword" IsPassword="True" Text="{ Binding Pass }" />
+                <Entry x:Name="entryPassword" IsPassword="True" Keyboard="Numeric" Text="{ Binding Pass }" />
 
                 <Label Text="Tolerance" />
                 <Entry x:Name="editorTolerance" Keyboard="Numeric" Text="{ Binding Tolerance }" />
