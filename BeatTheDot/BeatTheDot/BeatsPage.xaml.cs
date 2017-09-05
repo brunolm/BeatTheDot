@@ -10,6 +10,7 @@ using Xamarin.Forms.Xaml;
 
 namespace BeatTheDot
 {
+    [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class BeatsPage : ContentPage
     {
         public BeatsPage()
