@@ -61,7 +61,7 @@ namespace BeatTheDot.Services
                 this.client.Headers.Add(HttpRequestHeader.Cookie, cookie);
                 this.client.Headers.Remove(HttpRequestHeader.ContentType);
             }
-            catch (Exception ex)
+            catch
             {
             }
 
