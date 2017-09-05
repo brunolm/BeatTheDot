@@ -4,14 +4,11 @@
              x:Class="BeatTheDot.BeatsPage"
              Title="Beats">
     <ContentPage.Content>
-        <StackLayout>
+        <StackLayout Padding="10">
             <StackLayout Orientation="Horizontal">
                 <Label Text="Last fetch at:" />
                 <Label x:Name="labelLastFetch" Text="" />
             </StackLayout>
-
-            <TimePicker />
-            <Picker x:Name="pickerMonth" />
 
             <Button Clicked="FetchTimes" Text="Get beats" />
         </StackLayout>

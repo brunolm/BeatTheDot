@@ -5,7 +5,7 @@
              Title="Settings">
     <ContentPage.Content>
         <ScrollView>
-            <StackLayout>
+            <StackLayout Padding="10">
                 <Label Text="Company" />
                 <Entry x:Name="editorCompany" Text="{ Binding Company }" />
 

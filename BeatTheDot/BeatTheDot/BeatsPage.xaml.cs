@@ -21,10 +21,6 @@ namespace BeatTheDot
         {
             labelLastFetch.Text = DateTime.Now.ToString("HH:mm");
 
-            foreach (var item in DateTimeFormatInfo.CurrentInfo.MonthNames)
-            {
-                pickerMonth.Items.Add(item);
-            }
 
         }
     }

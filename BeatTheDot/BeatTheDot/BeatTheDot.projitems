@@ -22,6 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)MonthPage.xaml.cs">
       <DependentUpon>MonthPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Ahgora.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
