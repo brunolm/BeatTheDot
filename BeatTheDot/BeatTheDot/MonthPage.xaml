@@ -4,10 +4,16 @@
              x:Class="BeatTheDot.MonthPage"
              Title="Month">
     <ContentPage.Content>
-        <StackLayout Padding="10">
-            <Label Text="Welcome to Xamarin Forms!" />
-            <Button Clicked="FetchTimes" Text="Get beats" />
-            <Label Text="{ Binding Grid }" />
-        </StackLayout>
+        <ScrollView>
+            <StackLayout Padding="10">
+                <Label Text="{ Binding Loading }" />
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Last fetch at:" />
+                    <Label Text="{ Binding LastFetchAt }" />
+                </StackLayout>
+                <Button Clicked="FetchTimes" Text="Get beats" />
+                <Label Text="{ Binding Grid }" />
+            </StackLayout>
+        </ScrollView>
     </ContentPage.Content>
 </ContentPage>

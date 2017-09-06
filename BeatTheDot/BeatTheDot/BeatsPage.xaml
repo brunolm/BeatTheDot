@@ -4,13 +4,22 @@
              x:Class="BeatTheDot.BeatsPage"
              Title="Beats">
     <ContentPage.Content>
-        <StackLayout Padding="10">
-            <StackLayout Orientation="Horizontal">
-                <Label Text="Last fetch at:" />
-                <Label x:Name="labelLastFetch" Text="" />
-            </StackLayout>
+        <ScrollView>
+            <StackLayout Padding="10">
+                <Label Text="{ Binding Loading }" />
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Last fetch at:" />
+                    <Label Text="{ Binding LastFetchAt }" />
+                </StackLayout>
 
-            <Button Clicked="FetchTimes" Text="Get beats" />
-        </StackLayout>
+                <Button Clicked="FetchTimes" Text="Get beats" />
+
+                <Label Text="Today's beats" />
+                <Label Text="{ Binding BeatsRaw }" />
+
+                <Label Text="Hours today" />
+                <Label Text="{ Binding HoursToday }" />
+            </StackLayout>
+        </ScrollView>
     </ContentPage.Content>
 </ContentPage>

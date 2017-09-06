@@ -31,6 +31,7 @@ namespace BeatTheDot.Services
 
     public class Ahgora
     {
+        private readonly string hhmm = "hh':'mm";
         private readonly Random rnd = new Random();
         private CookieAwareWebClient client = new CookieAwareWebClient();
 
@@ -76,26 +77,17 @@ namespace BeatTheDot.Services
 
         public async Task<Dictionary<string, BeatInfo>> GetTimes()
         {
-            try
+            if (this.client.Headers[HttpRequestHeader.Cookie] == null)
             {
-                if (this.client.Headers[HttpRequestHeader.Cookie] == null)
-                {
-                    var settings = Settings;
-                    await Ahgora.Instance.Login(settings.Company, settings.User, settings.Pass);
-                }
-
-                var monthYear = DateTime.Now.ToString("MM-yyyy");
-                var url = $"/externo/batidas/{monthYear}?nocache=true&breaker={this.rnd.Next()}";
-
-                var page = await client.DownloadStringTaskAsync(url);
-                return ParseHTML(page);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
+                var settings = Settings;
+                await Ahgora.Instance.Login(settings.Company, settings.User, settings.Pass);
             }
 
-            return new Dictionary<string, BeatInfo>();
+            var monthYear = DateTime.Now.ToString("MM-yyyy");
+            var url = $"/externo/batidas/{monthYear}?nocache=true&breaker={this.rnd.Next()}";
+
+            var page = await client.DownloadStringTaskAsync(url);
+            return ParseHTML(page);
         }
 
         private Dictionary<string, BeatInfo> ParseHTML(string html)
@@ -139,7 +131,12 @@ namespace BeatTheDot.Services
 
             foreach (KeyValuePair<string, BeatInfo> item in times)
             {
-                sb.AppendLine($"{item.Key} - {item.Value.BeatsRaw} (##)");
+                if (item.Value.Beats.Length == 0)
+                {
+                    continue;
+                }
+
+                sb.AppendLine($"{item.Key} - {item.Value.BeatsRaw} ({HoursWorked(item.Value.Beats)})");
 
                 var scenarios = Calc(item.Value.Beats);
                 if (scenarios != null)
@@ -158,6 +155,30 @@ namespace BeatTheDot.Services
                 ? TimeSpan.ParseExact(beatTime, "g", CultureInfo.CurrentCulture)
                 : TimeSpan.Zero;
 
+        public string HoursWorked(Dictionary<string, BeatInfo> times)
+        {
+            return HoursWorked(GetToday(times).Beats);
+        }
+
+        public string HoursWorked(string[] beats)
+        {
+            switch (beats.Length)
+            {
+                case 4:
+                    var total = GetTime(beats[3]) - GetTime(beats[2]) + GetTime(beats[1]) - GetTime(beats[0]);
+                    return total.ToString(hhmm);
+                case 3:
+                    return (GetTime(beats[1]) - GetTime(beats[0])).ToString(hhmm) + "~";
+                case 2:
+                    return (GetTime(beats[1]) - GetTime(beats[0])).ToString(hhmm);
+                case 1:
+                    return "00~";
+                case 0:
+                default:
+                    return "00";
+            }
+        }
+
         public string Calc(string[] beats)
         {
             TimeSpan t1, t2, t3, t4;
@@ -168,12 +189,9 @@ namespace BeatTheDot.Services
             t4 = GetTime(beats.ElementAtOrDefault(3));
 
             var settings = Settings;
-
-            var hhmm = "hh':'mm";
+            
             switch (beats.Length)
             {
-                case 0:
-                    return null;
                 case 1:
                     var halfTime = settings.Worktime.Ticks / 2;
                     var before = t1.Subtract(new TimeSpan(halfTime)).ToString(hhmm);
@@ -209,88 +227,80 @@ namespace BeatTheDot.Services
 
             return null;
         }
+
+        public BeatInfo GetToday(Dictionary<string, BeatInfo> times)
+        {
+            return times[DateTime.Now.ToString("dd/MM/yyyy")];
+        }
+
+        public string ParseResult(Dictionary<string, BeatInfo> times)
+        {
+            TimeSpan t1, t2, t3, t4;
+
+            var today = GetToday(times);
+
+            t1 = GetTime(today.Beats.ElementAtOrDefault(0));
+            t2 = GetTime(today.Beats.ElementAtOrDefault(1));
+            t3 = GetTime(today.Beats.ElementAtOrDefault(2));
+            t4 = GetTime(today.Beats.ElementAtOrDefault(3));
+
+            switch (today.Beats.Length)
+            {
+                case 1:
+                    return $"You can go to lunch at {Settings.LunchAt.ToString(hhmm)}";
+                case 2:
+                    var backFromLunchAt = t2 + TimeSpan.FromMinutes(Settings.LunchTime);
+                    return $"You can come back from lunch at {backFromLunchAt.ToString(hhmm)} (±{Settings.Tolerance})";
+                case 3:
+                    var goHomeAt = Settings.Worktime - (t2 - t1) + t3;
+                    return $"You can leave at {goHomeAt.ToString(hhmm)} (±{Settings.Tolerance})";
+                case 4:
+                    return "All done for today!";
+                default:
+                    return "No beats registered";
+            }
+        }
     }
 }
 
 /*
-
-async function calc([time1, time2, time3, time4]) {
+ 
+export async function parseResult(times) {
   const options = await settingsService.get();
 
-  const [t1, t2, t3, t4] = [
-    moment(time1, hourMinuteFormat),
-    moment(time2, hourMinuteFormat),
-    moment(time3, hourMinuteFormat),
-    moment(time4, hourMinuteFormat),
-  ];
+  const today = getToday(times) || { beats: [] };
+  const t1 = moment(today.beats[0], hourMinuteFormat);
+  const t2 = moment(today.beats[1], hourMinuteFormat);
+  const t3 = moment(today.beats[2], hourMinuteFormat);
 
-  const scenarios = [];
+  switch (today.beats.length) {
+    case 1:
+      return `You can go to lunch at ${options.lunchAt}`;
 
-  const day = moment(options.workHours, hourMinuteFormat);
-  const morning = subTime(t2, t1);
-  const afternoon = subTime(t4, t3);
+    case 2:
+      const backFromLunchAt = moment(t2);
+      backFromLunchAt.add(options.lunchTime, 'minutes');
+      return `You can come back from lunch at ${moment(backFromLunchAt).format(hourMinuteFormat)} (±${options.tolerance})`;
 
-  const workedHours = t4.isValid()
-    ? moment(morning).add(afternoon.hour() as any, 'hours').add(afternoon.minute() as any, 'minutes')
-    : moment(morning);
+    case 3:
+      let section = moment(t2);
+      section.add(-t1.hour(), 'hours');
+      section.add(-t1.minute(), 'minutes');
 
-  if (t4.isValid()) {
-    if (workedHours.isAfter(moment(day).add(options.tolerance as any, 'minutes'))) {
-      const timeToRemove = subTime(workedHours, day);
-      {
-        // Scenario 1 - Remove from end of the day
-        const newEndTime = subTime(t4, timeToRemove);
-        scenarios.push(`${time1} ${time2} ${time3} *${newEndTime.format(hourMinuteFormat)}*`);
-      }
-    }
-    else if (workedHours.isBefore(moment(day).add(-options.tolerance as any, 'minutes'))) {
-      const timeToAdd = subTime(day, workedHours);
-      {
-        // Scenario 1 - Add to the end of the day
-        const newEndTime = addTime(t4, timeToAdd);
-        scenarios.push(`${time1} ${time2} ${time3} *${newEndTime.format(hourMinuteFormat)}*`);
-      }
-    }
+      const d = moment(`${options.workHours}00`.slice(-6), 'HHmmss');
+      d.add(-section.hour(), 'hours');
+      d.add(-section.minute(), 'minutes');
+
+      section = moment(t3);
+      section.add(d.hour(), 'hours');
+      section.add(d.minute(), 'minutes');
+
+      return `You can leave at ${moment(section).format(hourMinuteFormat)} (±${options.tolerance})`;
+    case 4:
+      return 'All done for today!';
+    default:
+      return 'No beats registered today!';
   }
-  else if (t3.isValid()) {
-    {
-      // Scenario 1 - Predict end of the day
-      const newEndTime = addTime(t3, subTime(day, morning));
-      scenarios.push(`${time1} ${time2} ${time3} *${newEndTime.format(hourMinuteFormat)}*`);
-    }
-    {
-      // Scenario 2 - Predict beginning of the day
-      const section = subTime(t1, subTime(day, subTime(t3, t2)));
-      scenarios.push(`*${section.format(hourMinuteFormat)}* ${time1} ${time2} ${time3}`);
-    }
-  }
-
-  return scenarios;
 }
 
-
-export async function parseGrid(times) {
-  const keys = Object.keys(times);
-
-  let grid = '';
-  for (const key of keys) {
-    const time = times[key];
-
-    if (time.beatsRaw) {
-      grid += `${key} - ${time.beatsRaw} (${time.total.match(/\d{2}:\d{2}/)})`;
-      if (time.patch.wrong.time) {
-        grid += ` (${time.patch.wrong.time} -> ${time.patch.correct.time})`;
-      }
-      grid += '\n';
-
-      const scenarios = await calc(time.beatsRaw.match(/\d{2}:\d{2}/g)) as string[];
-      if (scenarios.length) {
-        grid += '  ' + scenarios.join('\n  ');
-        grid += '\n';
-      }
-    }
-  }
-
-  return grid;
-}
-*/
+    */

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BeatTheDot.Models;
+using BeatTheDot.Services;
+using System;
 
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -16,13 +13,30 @@ namespace BeatTheDot
         public BeatsPage()
         {
             InitializeComponent();
+
+            this.BindingContext = new Beats();
         }
 
-        public void FetchTimes(object sender, EventArgs e)
+        public async void FetchTimes(object sender, EventArgs e)
         {
-            labelLastFetch.Text = DateTime.Now.ToString("HH:mm");
+            var vm = this.BindingContext as Beats;
 
+            try
+            {
+                vm.Loading = "Loading...";
 
+                var times = await Ahgora.Instance.GetTimes();
+
+                vm.LastFetchAt = DateTime.Now.ToString("HH:mm");
+                vm.Loading = "";
+                vm.BeatsRaw = Ahgora.Instance.ParseResult(times);
+                vm.HoursToday = Ahgora.Instance.HoursWorked(times);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                await DisplayAlert("Error", "Server error, try again later.", "OK");
+            }
         }
     }
 }
